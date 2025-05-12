@@ -5,6 +5,8 @@ void main() {
 }
 
 class SignUpApp extends StatelessWidget {
+  const SignUpApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -15,6 +17,8 @@ class SignUpApp extends StatelessWidget {
 }
 
 class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({super.key});
+
   @override
   _SignUpScreenState createState() => _SignUpScreenState();
 }

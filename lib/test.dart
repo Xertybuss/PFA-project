@@ -7,63 +7,66 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'User List from Flask',
-      home: UserListScreen(),
+    return MaterialApp(title: 'Send Data to Flask', home: SendDataScreen());
+  }
+}
+
+class SendDataScreen extends StatefulWidget {
+  const SendDataScreen({super.key});
+
+  @override
+  _SendDataScreenState createState() => _SendDataScreenState();
+}
+
+class _SendDataScreenState extends State<SendDataScreen> {
+  final TextEditingController _controller = TextEditingController();
+  String responseMessage = '';
+
+  Future<void> sendData(String inputText) async {
+    final url = 'http://127.0.0.1:5000/send-data';
+    final response = await http.post(
+      Uri.parse(url),
+      body: json.encode({'message': inputText}),
     );
-  }
-}
-
-class UserListScreen extends StatefulWidget {
-  @override
-  _UserListScreenState createState() => _UserListScreenState();
-}
-
-class _UserListScreenState extends State<UserListScreen> {
-  List<dynamic> users = [];
-  bool isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    fetchUsers();
-  }
-
-  Future<void> fetchUsers() async {
-    final response = await http.get(Uri.parse('http://127.0.0.1:5000/get-users'));
 
     if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
+      final data = json.decode(response.body);
       setState(() {
-        users = data;
-        isLoading = false;
+        responseMessage = 'Server response: ${data['status']}';
       });
     } else {
       setState(() {
-        isLoading = false;
+        responseMessage = 'Failed to send data.';
       });
-      throw Exception('Failed to load users');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Users')),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: users.length,
-              itemBuilder: (context, index) {
-                final user = users[index];
-                return ListTile(
-                  leading: CircleAvatar(child: Text(user['id'].toString())),
-                  title: Text(user['name']),
-                );
-              },
+      appBar: AppBar(title: Text('Send Data to Flask')),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: _controller,
+              decoration: InputDecoration(labelText: 'Enter message'),
             ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => sendData(_controller.text),
+              child: Text('Send'),
+            ),
+            SizedBox(height: 20),
+            Text(responseMessage),
+          ],
+        ),
+      ),
     );
   }
 }

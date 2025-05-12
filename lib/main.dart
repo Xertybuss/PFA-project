@@ -6,6 +6,8 @@ void main() {
 }
 
 class HealthAnalysisApp extends StatelessWidget {
+  const HealthAnalysisApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -20,6 +22,8 @@ class HealthFormScreen extends StatelessWidget {
   final TextEditingController cholesterolController = TextEditingController();
   final TextEditingController bpController = TextEditingController();
   final TextEditingController sugarController = TextEditingController();
+
+  HealthFormScreen({super.key});
 
   Widget _buildTextField(String hint, TextEditingController controller) {
     return Padding(
