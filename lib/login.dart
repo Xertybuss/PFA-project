@@ -1,19 +1,15 @@
+import 'dart:convert';
+import 'main.dart';
 import 'package:flutter/material.dart';
-import 'main.dart'; // ✅ Import this
-
-void main() {
-  runApp(LoginApp());
-}
+import 'package:http/http.dart' as http;
+import 'register.dart';
 
 class LoginApp extends StatelessWidget {
   const LoginApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: LoginScreen(),
-      debugShowCheckedModeBanner: false,
-    );
+    return MaterialApp(home: LoginScreen(), debugShowCheckedModeBanner: false);
   }
 }
 
@@ -31,7 +27,29 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController passwordController = TextEditingController();
   bool rememberMe = false;
 
-  Widget _buildTextField(String hint, TextEditingController controller, {bool obscure = false}) {
+  Future<void> login(String email, String password) async {
+    final url = Uri.parse("http://127.0.0.1:5000/api/login");
+    final request = await http.post(
+      url,
+      body: json.encode({'email': email, 'password': password}),
+    );
+
+    if (request.statusCode == 200) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => HealthAnalysisApp()),
+      );
+    } else {
+      final data = json.decode(request.body);
+      _showMessage(data['result']);
+    }
+  }
+
+  Widget _buildTextField(
+    String hint,
+    TextEditingController controller, {
+    bool obscure = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: TextField(
@@ -41,7 +59,10 @@ class _LoginScreenState extends State<LoginScreen> {
           hintText: hint,
           filled: true,
           fillColor: Colors.grey.shade100,
-          contentPadding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
+          contentPadding: EdgeInsets.symmetric(
+            vertical: 20.0,
+            horizontal: 20.0,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12.0),
             borderSide: BorderSide.none,
@@ -52,25 +73,21 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-
   void _checkLogin() {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
-    // ✅ Dummy logic: replace with real validation or Firebase later
-    if (email == "admin@example.com" && password == "admin123") {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HealthAnalysisApp()),
-      );
+    if (email.isEmpty || password.isEmpty) {
+      _showMessage('Please fill all fields');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Invalid credentials"),
-          backgroundColor: Colors.red,
-        ),
-      );
+      login(email, password);
     }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   // ... _buildTextField and build method continue
@@ -101,7 +118,11 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               SizedBox(height: 20),
               _buildTextField('Enter email', emailController),
-              _buildTextField('Enter Password', passwordController, obscure: true),
+              _buildTextField(
+                'Enter Password',
+                passwordController,
+                obscure: true,
+              ),
               Row(
                 children: [
                   Checkbox(
@@ -142,6 +163,18 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Text(
                   'Log in',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SignUpApp()),
+                  );
+                },
+                child: Text(
+                  "Don't have an account? Create one",
+                  style: TextStyle(color: Colors.blue),
                 ),
               ),
             ],

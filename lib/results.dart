@@ -1,29 +1,59 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
-void main() {
-  runApp(ResultApp());
-}
+class ResultScreen extends StatefulWidget {
+  final Map<String, dynamic> data;
 
-class ResultApp extends StatelessWidget {
-  const ResultApp({super.key});
+  const ResultScreen({super.key, required this.data});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: ResultScreen(),
-      debugShowCheckedModeBanner: false,
-    );
-  }
+  State<ResultScreen> createState() => _ResultScreenState();
 }
 
-class ResultScreen extends StatelessWidget {
-  const ResultScreen({super.key});
+class _ResultScreenState extends State<ResultScreen> {
+  String prediction = 'Loading...';
+  String confidence = 'Loading...';
+
+  Future<void> fetchMessage() async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+          'http://10.0.2.2:5000/api/get-start-analysis', // Adjusted for Android Emulator
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          prediction = data['message'];
+          confidence = data['confidence'].toString();
+        });
+      } else {
+        setState(() {
+          prediction = 'Error fetching data';
+          confidence = 'N/A';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        prediction = 'Error occurred: $e';
+        confidence = 'N/A';
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchMessage();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Health Analysis"),
+        title: const Text("Health Analysis"),
         backgroundColor: Colors.blue,
         centerTitle: true,
       ),
@@ -34,48 +64,47 @@ class ResultScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Replace with your asset image
-              Image.asset(
-                'images/image1.png',
-                height: 180,
-              ),
-              SizedBox(height: 30),
-              Text(
-                'Here is the results',
+              Image.asset('images/image1.png', height: 180),
+              const SizedBox(height: 30),
+              const Text(
+                'Here is the result',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
               ),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.circle, color: Colors.green, size: 25),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Text(
-                    'No heart disease',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    widget.data['prediction']['label'] ?? 'N/A',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Text(
-                'Confidence : 60%',
-                style: TextStyle(fontSize: 18),
+                'Confidence: ${widget.data['prediction']['confidence']}%',
+                style: const TextStyle(fontSize: 18),
               ),
-              SizedBox(height: 40),
+              const SizedBox(height: 40),
               ElevatedButton(
-                onPressed: () {
-                  // Navigate to the next screen
-                },
+                onPressed: () {},
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 60, vertical: 18),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 60,
+                    vertical: 18,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                   elevation: 5,
                 ),
-                child: Text(
+                child: const Text(
                   'Next',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
